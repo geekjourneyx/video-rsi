@@ -1,0 +1,53 @@
+name: Publish npm release
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: npm-publish
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7, verified 2026-10-09
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7, verified 2026-10-09
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Use an OIDC-capable npm CLI
+        run: npm install --global npm@11.9.0
+      - name: Explain release readiness blockers and validate tag
+        run: node scripts/release-readiness.mjs
+      - run: npm ci
+      - run: npm run check
+      - name: Pack once and inspect the release artifact
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/video-rsi-release"
+          npm pack --ignore-scripts --json --pack-destination "$RUNNER_TEMP/video-rsi-release" > "$RUNNER_TEMP/video-rsi-release/pack.json"
+          PACKAGE_TARBALL=$(node --input-type=module -e 'import {readFileSync} from "node:fs"; import {join} from "node:path"; const root=join(process.env.RUNNER_TEMP,"video-rsi-release"); console.log(join(root,JSON.parse(readFileSync(join(root,"pack.json"),"utf8"))[0].filename));')
+          echo "PACKAGE_TARBALL=$PACKAGE_TARBALL" >> "$GITHUB_ENV"
+          tar -tzf "$PACKAGE_TARBALL"
+          sha256sum "$PACKAGE_TARBALL" > "$RUNNER_TEMP/video-rsi-release/tarball.sha256"
+      - name: Install and verify the exact inspected artifact offline
+        run: npm test -- tests/package.test.ts
+      - name: Dry run the exact release artifact
+        run: npm publish "$PACKAGE_TARBALL" --dry-run --ignore-scripts --access public
+      - name: Verify artifact is unchanged
+        run: sha256sum --check "$RUNNER_TEMP/video-rsi-release/tarball.sha256"
+      - name: Publish inspected tarball with OIDC provenance
+        run: npm publish "$PACKAGE_TARBALL" --ignore-scripts --provenance --access public

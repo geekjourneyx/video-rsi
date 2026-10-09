@@ -21,6 +21,8 @@
 
 首版一个 npm 包、单进程、顺序请求，不建 monorepo、多服务或通用调度框架。Node >=22.19.0、ESM、TypeScript strict、npm lockfile、Vitest。macOS/Linux 是验收平台。运行依赖仅 pi-ai、Zod；JSON 配置，原生 parseArgs/fs/crypto；不引入 YAML、数据库、向量库或 Web UI。Pi 包当前为 @earendil-works/pi-ai，实施前确认发布版本和许可证并锁定；不要照搬旧包名或旧全局 API。
 
+Node floor 验收说明（2026-10-09）：lockfile 中 Rollup 的 Linux x64 可选开发依赖 `@napi-rs/lzma-linux-x64-gnu@1.5.1` 声明 `^22.20 || ^24.12 || >=25`。它不是运行依赖；在 Node 22.19.0/npm 10.9.3 的隔离目录实际执行 `npm ci --offline` 时被跳过，随后完整 typecheck/build/test 与离线安装验收全部通过（175 个测试）。Node >=22.19.0 保持不变；CI 持续在 Linux/macOS 核验该 floor，不能因新的必需依赖而默默提高最低版本。
+
 ## 3. 首版功能和非目标
 
 输出标题、封面文案与构图建议、完整脚本、前 5/10 秒内容、事实来源映射、评审理由、Top 3。时长仅由简报目标与字数估计提示，不能保证实际口播秒数。
@@ -40,7 +42,7 @@ video-rsi resume runs/<run-id> > result.json
 video-rsi replay runs/<run-id> > recorded.json
 ```
 
-create 默认只有一批生成；--review 执行生成与评审，使用配置 rounds；不带 --review 时 rounds 必须为 1，否则报参数错误。独立 judge 仅评审传入候选一次。report 和 replay 零网络。所有读取 JSON 的命令支持 `-` 表示 stdin。
+create 默认只有一批生成；--review 执行生成与评审，使用配置 rounds；不带 --review 时 rounds 必须为 1，否则报参数错误。独立 judge 仅评审传入候选一次。report 和 replay 零网络。所有读取 JSON 的命令支持 `-` 表示 stdin。Brief 和 Config 输入（文件或 stdin）最大 1 MiB；judge/report 读取的派生 CandidateBatch/EvaluatedBatch 输入最大 8 MiB，允许合法 Brief 加候选与评审后继续通过管道处理。
 
 stdout 只输出一个完整 JSON（或显式选择的 Markdown），进度/错误去 stderr；不混入 ANSI、模型 token 流或标题。无 TTY 提问、自动开浏览器、隐式安装和隐式网络。--help/--version 不需配置或密钥。通过 shell 和文件组合，不将每一步包装成新 Agent。
 
@@ -66,7 +68,7 @@ stdout 只输出一个完整 JSON（或显式选择的 Markdown），进度/错�
 - RunEvent：schemaVersion、seq、runId、type、at、payload；type 为 started/call_started/call_finished/call_unknown/round_finished/stopped/completed。
 - RunRecord：schemaVersion、runId、status:'running'|'interrupted'|'failed'|'limited'|'completed'、manifest、events:RunEvent[]、result?:CandidateBatch|EvaluatedBatch。
 
-schema 限制：文件最大 1 MiB；非空字符串；rounds 1–5；candidatesPerRound 1–8；maxCalls 1–20；maxOutputTokens 1–8192；timeoutMs 1000–120000；各评分为 0–4 整数。sources.id 唯一，candidate.id 由程序生成；未知字段拒绝。maxEstimatedCostMicrousd 要么 null，要么正整数。brief.durationSeconds 为 1–300 且 min<=max。judge 输出需恰好覆盖输入候选和每条 claim，不允许重复/新增 ID。
+schema 限制：Brief/Config 输入最大 1 MiB；派生 CandidateBatch/EvaluatedBatch 输入最大 8 MiB；内部证据文档及单条事件最大 8 MiB；非空字符串；rounds 1–5；candidatesPerRound 1–8；maxCalls 1–20；maxOutputTokens 1–8192；timeoutMs 1000–120000；各评分为 0–4 整数。sources.id 唯一，candidate.id 由程序生成；未知字段拒绝。maxEstimatedCostMicrousd 要么 null，要么正整数。brief.durationSeconds 为 1–300 且 min<=max。judge 输出需恰好覆盖输入候选和每条 claim，不允许重复/新增 ID。report 对候选唯一性、来源引用、评审覆盖及 Top/status 与 verdicts 的一致性进行验证；不一致时报输入错误，不静默重排或修正记录。
 
 ## 6. 生成、评审与可信度
 
@@ -100,11 +102,15 @@ replay 读取和校验已有 result/hash，输出相同结果，绝不调用模�
 
 命令：blind prepare <study.json> --out <directory>；blind record <directory> --pair <id> --choice A|B|tie|neither --reason <text> --edit-minutes <n>；blind summary <directory>。
 
+Study 输入最大 8 MiB（包含派生候选）；blind allocation/review 与单条选择事件各最大 8 MiB。Brief/Config 的默认 1 MiB 上限保持不变。
+
 Study：schemaVersion、seed、items:[{briefId,variant:'manual'|'single'|'multi',candidate:Candidate,productionMinutes:number,runPath?:string}]。同 brief 每种 variant 恰好一个，缺项拒绝。单轮/多轮各选事先约定的 Top 1，不得在盲选结果出来后更换。人工稿在看到模型输出前准备；没有人工稿可改为仅 single/multi 两臂，Study 增加 arms 字段明确列出两臂或三臂，禁止伪造人工基线。
 
 prepare 生成每个 brief 的全部两两比较，左右随机，用无语义 pair ID；review.md 只含统一格式的内容，allocation.json 单独保存映射，selection.jsonl 保存选择。已存在输出目录拒绝覆盖。模型自评、provider、成本、variant、round 均不出现在盲选页。风格仍可能暴露来源，承认这是有限盲法。
 
-选项 tie 表示都可用且无明显偏好，neither 表示都不愿采用；记录后不可覆盖旧结果，误操作追加 supersedes 指向原记录并保留审计。summary 在全部比较完成前拒绝解盲；不给未完成样本假结果。
+选项 tie 表示都可用且无明显偏好，neither 表示都不愿采用；记录后不可覆盖旧结果，误操作追加 supersedes 指向原记录并保留审计。summary 在全部比较完成前拒绝解盲；不给未完成样本假结果。`--supersedes <eventId>` 仅指向同一 pair 当前有效记录的 eventId（保存在 selection.jsonl）；追加保留旧记录，独占锁防止并发覆盖。
+
+`--edit-minutes` 为选中 A/B 方案预计修改时间，tie/neither 必须填写 0 且不计入改稿均值。两两偏好为 `(winsA + ties * 0.5) / (winsA + winsB + ties)`；全部 neither 时为 null。人工制作分钟独立列出；未引用运行或费用未知时费用为 null。引用运行必须完成且候选与已验证结果内容/ID 一致、为 Top 1，single/multi 必须对应实际一轮/多轮 create+review；成本包含该运行的全部尝试，由 hash 校验后的调用证据读取。盲选页简报只展示 briefId 中性参考，Study 不包含完整 Brief 文本。examples/study.json 是格式占位示例，没有真实基线或本人盲选结果。
 
 核心读数：各臂采纳意愿、两两偏好（胜1/平0.5/负0，neither单列并报告覆盖率）、人工预计改稿分钟、生成/制作耗时、模型费用。没有显著性或泛化承诺。多轮与单轮明确标注实际预算；非同预算结果不能用于算法效率优势结论。
 

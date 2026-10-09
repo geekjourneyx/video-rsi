@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "topic": "示例：用一次 Git 提交解释版本控制",
+  "platform": "技术短视频",
+  "audience": [
+    "刚接触 Git 的开发者"
+  ],
+  "durationSeconds": {
+    "min": 30,
+    "max": 60
+  },
+  "sources": [
+    {
+      "id": "demo-note",
+      "title": "示例作者笔记（请替换为核对过的材料）",
+      "excerpt": "演示时先修改文件，再暂存变更，最后建立一次提交。这里仅提供写作练习材料。"
+    }
+  ]
+}

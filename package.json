@@ -1,0 +1,39 @@
+{
+  "name": "video-rsi",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "bin": {
+    "video-rsi": "dist/cli.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-prompts.mjs",
+    "typecheck": "tsc --noEmit",
+    "smoke:providers": "npm run build && node --experimental-strip-types scripts/provider-smoke.ts",
+    "check": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "1.1.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Local short-video candidate generation, model review, durable replay and personal blind comparison CLI",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geekjourneyx/video-rsi.git"
+  }
+}

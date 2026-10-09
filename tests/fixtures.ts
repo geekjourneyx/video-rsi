@@ -1,0 +1,5 @@
+import type {Brief,Config,CandidateBatch,EvaluatedBatch} from '../src/contracts.js';
+export const brief = {schemaVersion:1,topic:'城市散步',platform:'短视频',audience:['通勤者'],durationSeconds:{min:30,max:60},sources:[{id:'s1',title:'资料',excerpt:'步行路线'}]} satisfies Brief;
+export const config = {schemaVersion:1,models:{writer:{provider:'openai',model:'writer',apiKeyEnv:'OPENAI_API_KEY'},judge:{provider:'anthropic',model:'judge',apiKeyEnv:'ANTHROPIC_API_KEY'}},rounds:1,candidatesPerRound:3,limits:{maxCalls:2,maxOutputTokens:2048,timeoutMs:30000,maxEstimatedCostMicrousd:null}} satisfies Config;
+export const candidates = {schemaVersion:1,runId:'test-run',brief,candidates:[{id:'c1',round:1,title:'散步',cover:{text:'走走',direction:'城市'},script:'出门散步',hook5s:'走吧',hook10s:'一起走',claims:[{text:'路线',sourceIds:['s1']}]}]} satisfies CandidateBatch;
+export const evaluated = {...candidates,evaluation:{kind:'model_judgment',verdicts:[{candidateId:'c1',scores:{audience:3,clarity:3,consistency:3,utility:3},claims:[{index:0,status:'supported',reason:'来源支持'}],reason:'清晰'}],topIds:['c1'],status:'ok'}} satisfies EvaluatedBatch;

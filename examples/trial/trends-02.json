@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "topic": "待所有者确认的拟议示例：趋势观点：何时值得增加 Agent 编排复杂度。仅使用随后补充并核验的材料，不编造经历、数据或出处。",
+  "platform": "技术短视频（待确认）",
+  "audience": [
+    "考虑采用 Agent 工作流的开发者"
+  ],
+  "durationSeconds": {
+    "min": 45,
+    "max": 90
+  },
+  "sources": []
+}

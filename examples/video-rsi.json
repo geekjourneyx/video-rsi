@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "models": {
+    "writer": {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "apiKeyEnv": "OPENAI_API_KEY"
+    },
+    "judge": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+      "apiKeyEnv": "ANTHROPIC_API_KEY"
+    }
+  },
+  "rounds": 1,
+  "candidatesPerRound": 3,
+  "limits": {
+    "maxCalls": 2,
+    "maxOutputTokens": 2048,
+    "timeoutMs": 30000,
+    "maxEstimatedCostMicrousd": null
+  }
+}

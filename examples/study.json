@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "seed": 42,
+  "arms": [
+    "single",
+    "multi"
+  ],
+  "items": [
+    {
+      "briefId": "example-reference",
+      "variant": "single",
+      "candidate": {
+        "id": "example-single",
+        "round": 1,
+        "title": "示例：解释版本控制",
+        "cover": {
+          "text": "示例内容",
+          "direction": "统一文字封面"
+        },
+        "script": "这是演示格式的占位脚本，请替换为真实简报的预先选定方案。",
+        "hook5s": "示例开场。",
+        "hook10s": "示例继续。",
+        "claims": []
+      },
+      "productionMinutes": 0
+    },
+    {
+      "briefId": "example-reference",
+      "variant": "multi",
+      "candidate": {
+        "id": "example-multi",
+        "round": 2,
+        "title": "示例：解释版本控制",
+        "cover": {
+          "text": "示例内容",
+          "direction": "统一文字封面"
+        },
+        "script": "这是另一条占位脚本，仅用于演示文件结构。",
+        "hook5s": "示例开场。",
+        "hook10s": "示例继续。",
+        "claims": []
+      },
+      "productionMinutes": 0
+    }
+  ]
+}
